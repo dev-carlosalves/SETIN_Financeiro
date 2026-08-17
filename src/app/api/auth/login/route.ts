@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getIronSession } from 'iron-session'
-import { sessionOptions, SessionData } from '@/lib/session'
+import { getSessionOptions, SessionData } from '@/lib/session'
 import { normalizeName } from '@/lib/utils'
 
 // Simple in-memory rate limiting (per IP)
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   // Create session
   const response = NextResponse.json({ success: true, nome: normalizeName(nome) })
-  const session = await getIronSession<SessionData>(request, response, sessionOptions)
+  const session = await getIronSession<SessionData>(request, response, getSessionOptions())
 
   session.nome = normalizeName(nome)
   session.loggedIn = true
