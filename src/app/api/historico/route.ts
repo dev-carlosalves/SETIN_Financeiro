@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { toNumber } from '@/lib/utils'
+import type { vendas, receitas_outras, despesas } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
         where: whereVenda,
         orderBy: { criado_em: 'desc' },
       })
-      vendas.forEach((v) => {
+      vendas.forEach((v: vendas) => {
         items.push({
           id: v.id,
           tipo: 'venda',
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
         where: whereReceita,
         orderBy: { criado_em: 'desc' },
       })
-      receitas.forEach((r) => {
+      receitas.forEach((r: receitas_outras) => {
         items.push({
           id: r.id,
           tipo: 'receita',
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
         where: whereDespesa,
         orderBy: { criado_em: 'desc' },
       })
-      despesas.forEach((d) => {
+      despesas.forEach((d: despesas) => {
         items.push({
           id: d.id,
           tipo: 'despesa',

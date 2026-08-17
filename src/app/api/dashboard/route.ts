@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { toNumber } from '@/lib/utils'
+import type { vendas, receitas_outras, despesas, metas } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -71,18 +72,18 @@ export async function GET(request: NextRequest) {
         .reduce((sum, v) => sum + toNumber(v.valor_total), 0)
 
       const dayReceitasRecebidas = allReceitas
-        .filter((r) => r.data.toISOString().split('T')[0] === dateStr && r.status === 'recebido')
-        .reduce((sum, r) => sum + toNumber(r.valor), 0)
+        .filter((r: receitas_outras) => r.data.toISOString().split('T')[0] === dateStr && r.status === 'recebido')
+        .reduce((sum: number, r: receitas_outras) => sum + toNumber(r.valor), 0)
       const dayReceitasTodas = allReceitas
-        .filter((r) => r.data.toISOString().split('T')[0] === dateStr)
-        .reduce((sum, r) => sum + toNumber(r.valor), 0)
+        .filter((r: receitas_outras) => r.data.toISOString().split('T')[0] === dateStr)
+        .reduce((sum: number, r: receitas_outras) => sum + toNumber(r.valor), 0)
 
       const dayDespesasPagas = allDespesas
-        .filter((d) => d.data.toISOString().split('T')[0] === dateStr && d.status === 'pago')
-        .reduce((sum, d) => sum + toNumber(d.valor), 0)
+        .filter((d: despesas) => d.data.toISOString().split('T')[0] === dateStr && d.status === 'pago')
+        .reduce((sum: number, d: despesas) => sum + toNumber(d.valor), 0)
       const dayDespesasTodas = allDespesas
-        .filter((d) => d.data.toISOString().split('T')[0] === dateStr)
-        .reduce((sum, d) => sum + toNumber(d.valor), 0)
+        .filter((d: despesas) => d.data.toISOString().split('T')[0] === dateStr)
+        .reduce((sum: number, d: despesas) => sum + toNumber(d.valor), 0)
 
       cumulativeReal += dayVendas + dayReceitasRecebidas - dayDespesasPagas
       cumulativeProjetado += dayVendas + dayReceitasTodas - dayDespesasTodas
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
     // ===== Rankings =====
     // Products by quantity and by total value
     const produtosMap: Record<string, { quantidade: number; valor: number }> = {}
-    allVendas.forEach((v) => {
+    allVendas.forEach((v: vendas) => {
       if (!produtosMap[v.produto]) produtosMap[v.produto] = { quantidade: 0, valor: 0 }
       produtosMap[v.produto].quantidade += v.quantidade
       produtosMap[v.produto].valor += toNumber(v.valor_total)
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
 
     // Vendedores by total value
     const vendedoresMap: Record<string, number> = {}
-    allVendas.forEach((v) => {
+    allVendas.forEach((v: vendas) => {
       vendedoresMap[v.vendedor] = (vendedoresMap[v.vendedor] || 0) + toNumber(v.valor_total)
     })
     const rankingVendedores = Object.entries(vendedoresMap)
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
 
     // Expenses by category
     const categoriasMap: Record<string, number> = {}
-    allDespesas.forEach((d) => {
+    allDespesas.forEach((d: despesas) => {
       categoriasMap[d.categoria] = (categoriasMap[d.categoria] || 0) + toNumber(d.valor)
     })
     const rankingCategorias = Object.entries(categoriasMap)

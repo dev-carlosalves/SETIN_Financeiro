@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { toNumber } from '@/lib/utils'
+import type { vendas, receitas_outras, despesas } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,9 +12,9 @@ export async function GET(request: NextRequest) {
     ])
 
     const items: Array<Record<string, unknown>> = [
-      ...vendas.map((v) => ({ ...v, _tipo: 'venda', valor: toNumber(v.valor_total) })),
-      ...receitas.map((r) => ({ ...r, _tipo: 'receita', valor: toNumber(r.valor) })),
-      ...despesas.map((d) => ({ ...d, _tipo: 'despesa', valor: toNumber(d.valor) })),
+      ...vendas.map((v: vendas) => ({ ...v, _tipo: 'venda', valor: toNumber(v.valor_total) })),
+      ...receitas.map((r: receitas_outras) => ({ ...r, _tipo: 'receita', valor: toNumber(r.valor) })),
+      ...despesas.map((d: despesas) => ({ ...d, _tipo: 'despesa', valor: toNumber(d.valor) })),
     ]
 
     items.sort((a, b) => {
