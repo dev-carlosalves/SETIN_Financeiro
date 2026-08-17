@@ -119,18 +119,32 @@ export async function GET(request: NextRequest) {
     items.sort((a, b) => b.criado_em.getTime() - a.criado_em.getTime())
 
     if (exportCsv) {
-      const headers = ['Tipo', 'Data', 'Descrição', 'Valor', 'Status', 'Responsável/Vendedor', 'Produto/Categoria']
-      const rows = items.map((item) => [
-        item.tipo,
-        item.data.toISOString().split('T')[0],
-        item.descricao,
-        item.valor.toFixed(2),
-        item.status || '',
-        item.responsavel || item.vendedor || '',
-        item.produto || item.categoria || item.tipo_receita || '',
-      ])
-      const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
-      return new NextResponse(csv, {
+      const headers = ['Tipo', 'Data', 'Descrição', 'Valor (R$)', 'Status', 'Responsável / Vendedor', 'Produto / Categoria']
+      const rows = items.map((item) => {
+        const dataObj = new Date(item.data)
+        const dia = String(dataObj.getUTCDate()).padStart(2, '0')
+        const mes = String(dataObj.getUTCMonth() + 1).padStart(2, '0')
+        const ano = dataObj.getUTCFullYear()
+        const dataFormatada = `${dia}/${mes}/${ano}`
+
+        return [
+          item.tipo.toUpperCase(),
+          dataFormatada,
+          item.descricao,
+          item.valor.toFixed(2).replace('.', ','),
+          item.status ? item.status.toUpperCase() : 'N/A',
+          item.responsavel || item.vendedor || '',
+          item.produto || item.categoria || item.tipo_receita || '',
+        ]
+      })
+
+      // Excel Brasil uses ';' separator and requires UTF-8 BOM (\uFEFF) for accents (Café, Descrição, etc.)
+      const csvContent = [headers, ...rows]
+        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+        .join('\r\n')
+
+      const bom = '\uFEFF'
+      return new NextResponse(bom + csvContent, {
         headers: {
           'Content-Type': 'text/csv; charset=utf-8',
           'Content-Disposition': 'attachment; filename="historico-setin.csv"',
