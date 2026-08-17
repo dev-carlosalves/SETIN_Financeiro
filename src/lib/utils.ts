@@ -16,9 +16,30 @@ export function formatCurrency(value: number | string): string {
 }
 
 // Format date to dd/mm/yyyy
-export function formatDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date + 'T00:00:00') : date
-  return d.toLocaleDateString('pt-BR')
+export function formatDate(date: Date | string | null | undefined): string {
+  if (!date) return '—'
+
+  if (typeof date === 'string') {
+    const cleanStr = date.trim()
+    const match = cleanStr.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    if (match) {
+      const [, year, month, day] = match
+      return `${day}/${month}/${year}`
+    }
+    const d = new Date(cleanStr)
+    if (isNaN(d.getTime())) return '—'
+    return d.toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+  }
+
+  if (date instanceof Date) {
+    if (isNaN(date.getTime())) return '—'
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const year = date.getUTCFullYear()
+    return `${day}/${month}/${year}`
+  }
+
+  return '—'
 }
 
 // Get today in YYYY-MM-DD format for input[type=date] default value

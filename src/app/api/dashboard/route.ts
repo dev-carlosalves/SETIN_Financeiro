@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { toNumber } from '@/lib/utils'
+import { toNumber, todayISO } from '@/lib/utils'
 import type { vendas, receitas_outras, despesas, metas } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
-    const today = new Date()
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
+    const todayStr = todayISO()
 
     // Fetch all data
     const [allVendas, allReceitas, allDespesas, metas] = await Promise.all([
@@ -17,10 +15,14 @@ export async function GET(request: NextRequest) {
       prisma.metas.findMany(),
     ])
 
+    const isToday = (date: Date | string | null | undefined) => {
+      if (!date) return false
+      const str = typeof date === 'string' ? date.split('T')[0] : date.toISOString().split('T')[0]
+      return str === todayStr
+    }
+
     // ===== Summary Cards =====
-    const vendasHoje = allVendas.filter(
-      (v) => v.data >= todayStart && v.data < todayEnd
-    )
+    const vendasHoje = allVendas.filter((v) => isToday(v.data))
     const totalVendidoHoje = vendasHoje.reduce((sum, v) => sum + toNumber(v.valor_total), 0)
     const totalVendidoEvento = allVendas.reduce((sum, v) => sum + toNumber(v.valor_total), 0)
 
@@ -40,15 +42,11 @@ export async function GET(request: NextRequest) {
     // ===== Metas =====
     const metaTotal = metas.find((m) => m.tipo === 'total_evento')
     const metaDiaria = metas.find(
-      (m) =>
-        m.tipo === 'diaria' &&
-        m.referencia &&
-        m.referencia >= todayStart &&
-        m.referencia < todayEnd
+      (m) => m.tipo === 'diaria' && m.referencia && isToday(m.referencia)
     )
 
     const receitasHoje = allReceitas
-      .filter((r) => r.data >= todayStart && r.data < todayEnd && r.status === 'recebido')
+      .filter((r) => isToday(r.data) && r.status === 'recebido')
       .reduce((sum, r) => sum + toNumber(r.valor), 0)
     const totalHoje = totalVendidoHoje + receitasHoje
 
