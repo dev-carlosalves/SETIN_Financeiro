@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model vendas {
+  id             Int      @id @default(autoincrement())
+  data           DateTime @db.Date
+  vendedor       String
+  produto        String
+  quantidade     Int
+  valor_unitario Decimal  @db.Decimal(10, 2)
+  valor_total    Decimal  @db.Decimal(10, 2)
+  cliente        String?
+  criado_em      DateTime @default(now())
+}
+
+model receitas_outras {
+  id          Int      @id @default(autoincrement())
+  data        DateTime @db.Date
+  tipo        String
+  descricao   String
+  valor       Decimal  @db.Decimal(10, 2)
+  status      String   @default("previsto")
+  responsavel String
+  criado_em   DateTime @default(now())
+}
+
+model despesas {
+  id              Int      @id @default(autoincrement())
+  data            DateTime @db.Date
+  categoria       String
+  descricao       String
+  fornecedor      String?
+  valor           Decimal  @db.Decimal(10, 2)
+  status          String   @default("pendente")
+  forma_pagamento String?
+  responsavel     String
+  criado_em       DateTime @default(now())
+}
+
+model metas {
+  id         Int       @id @default(autoincrement())
+  tipo       String
+  referencia DateTime? @db.Date
+  valor_meta Decimal   @db.Decimal(10, 2)
+}
