@@ -21,6 +21,12 @@
     -webkit-appearance: none;
     margin: 0;
   }
+
+  /* Desabilitar ícone de revelar senha nativo e escuro do navegador */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
 }
 
 @layer components {
