@@ -15,7 +15,7 @@ export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEd
   const [form, setForm] = useState({
     data: todayISO(),
     vendedor: nomeUsuario,
-    produto: PRODUTOS[0],
+    produto: PRODUTOS[0] || 'Café',
     quantidade: '1',
     valor_unitario: '',
     cliente: '',
@@ -25,8 +25,10 @@ export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEd
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    setForm((f) => ({ ...f, vendedor: nomeUsuario }))
-  }, [nomeUsuario])
+    if (!editData) {
+      setForm((f) => ({ ...f, vendedor: nomeUsuario }))
+    }
+  }, [nomeUsuario, editData])
 
   useEffect(() => {
     if (editData) {
@@ -51,10 +53,14 @@ export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEd
     setSuccess(false)
   }
 
+  const setQuickProduct = (p: string) => {
+    setForm((prev) => ({ ...prev, produto: p }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.produto || !form.quantidade || !form.valor_unitario) {
-      setError('Produto, quantidade e valor são obrigatórios.')
+      setError('Produto, quantidade e valor unitário são obrigatórios.')
       return
     }
     setLoading(true)
@@ -70,44 +76,78 @@ export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEd
       })
       if (!res.ok) {
         const d = await res.json()
-        setError(d.error || 'Erro ao salvar.')
+        setError(d.error || 'Erro ao registrar venda.')
       } else {
         setSuccess(true)
         if (!editData) {
-          setForm({ data: todayISO(), vendedor: nomeUsuario, produto: PRODUTOS[0], quantidade: '1', valor_unitario: '', cliente: '' })
+          setForm({
+            data: todayISO(),
+            vendedor: nomeUsuario,
+            produto: PRODUTOS[0] || 'Café',
+            quantidade: '1',
+            valor_unitario: '',
+            cliente: '',
+          })
         }
         onSuccess()
         setTimeout(() => setSuccess(false), 3000)
       }
     } catch {
-      setError('Erro de conexão.')
+      setError('Erro de conexão ao salvar venda.')
     }
     setLoading(false)
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Data</label>
-          <input type="date" name="data" value={form.data} onChange={handleChange} className="input-field" />
-        </div>
-        <div>
-          <label className="label">Vendedor</label>
-          <input type="text" name="vendedor" value={form.vendedor} onChange={handleChange} className="input-field" placeholder="Nome" />
-        </div>
-      </div>
-
+      {/* Product Quick Select */}
       <div>
         <label className="label">Produto</label>
-        <select name="produto" value={form.produto} onChange={handleChange} className="input-field">
+        <div className="grid grid-cols-3 gap-2 mb-2">
           {PRODUTOS.map((p) => (
-            <option key={p} value={p}>{p}</option>
+            <button
+              key={p}
+              type="button"
+              onClick={() => setQuickProduct(p)}
+              className={`py-2 px-3 rounded-lg text-xs font-medium border transition-all text-center ${
+                form.produto === p
+                  ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-300 font-semibold'
+                  : 'bg-zinc-950/50 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+              }`}
+            >
+              {p}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="label">Data da Venda</label>
+          <input
+            type="date"
+            name="data"
+            value={form.data}
+            onChange={handleChange}
+            className="input-field"
+            required
+          />
+        </div>
+        <div>
+          <label className="label">Vendedor Responsável</label>
+          <input
+            type="text"
+            name="vendedor"
+            value={form.vendedor}
+            onChange={handleChange}
+            className="input-field"
+            placeholder="Nome do vendedor"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="label">Quantidade</label>
           <input
@@ -119,10 +159,11 @@ export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEd
             min="1"
             inputMode="numeric"
             placeholder="1"
+            required
           />
         </div>
         <div>
-          <label className="label">Valor unitário (R$)</label>
+          <label className="label">Valor Unitário (R$)</label>
           <input
             type="number"
             name="valor_unitario"
@@ -133,29 +174,45 @@ export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEd
             step="0.01"
             inputMode="decimal"
             placeholder="0,00"
+            required
           />
         </div>
       </div>
 
-      {/* Live total */}
-      {valorTotalDisplay > 0 && (
-        <div className="bg-indigo-950/40 border border-indigo-800/50 rounded-xl px-4 py-3 flex justify-between items-center">
-          <span className="text-sm text-indigo-300">Total calculado</span>
-          <span className="text-lg font-bold text-indigo-300">{formatCurrency(valorTotalDisplay)}</span>
+      {/* Calculated Total Box */}
+      <div className="bg-zinc-950/80 border border-zinc-800 rounded-lg px-4 py-3 flex justify-between items-center">
+        <span className="text-xs font-medium uppercase tracking-wider text-zinc-400">Total da Venda</span>
+        <span className="text-base font-semibold text-emerald-400 font-mono">
+          {formatCurrency(valorTotalDisplay)}
+        </span>
+      </div>
+
+      <div>
+        <label className="label">Identificação do Cliente (Opcional)</label>
+        <input
+          type="text"
+          name="cliente"
+          value={form.cliente}
+          onChange={handleChange}
+          className="input-field"
+          placeholder="Ex: Aluno, Professor, Convidado"
+        />
+      </div>
+
+      {error && (
+        <div className="text-rose-400 text-xs bg-rose-950/40 border border-rose-800/40 rounded-lg px-3 py-2.5">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="text-emerald-400 text-xs bg-emerald-950/40 border border-emerald-800/40 rounded-lg px-3 py-2.5">
+          Venda registrada com sucesso no sistema.
         </div>
       )}
 
-      <div>
-        <label className="label">Cliente (opcional)</label>
-        <input type="text" name="cliente" value={form.cliente} onChange={handleChange} className="input-field" placeholder="Nome do cliente" />
-      </div>
-
-      {error && <p className="text-red-400 text-sm bg-red-950/40 border border-red-800/50 rounded-xl px-3 py-2">{error}</p>}
-      {success && <p className="text-emerald-400 text-sm bg-emerald-950/40 border border-emerald-800/50 rounded-xl px-3 py-2">✓ Venda registrada com sucesso!</p>}
-
-      <div className="flex gap-2">
+      <div className="flex gap-2.5 pt-1">
         <button type="submit" disabled={loading} className="btn-primary flex-1">
-          {loading ? 'Salvando...' : editData ? 'Atualizar venda' : 'Registrar venda'}
+          {loading ? 'Processando...' : editData ? 'Salvar Alterações' : 'Lançar Venda'}
         </button>
         {editData && onCancelEdit && (
           <button type="button" onClick={onCancelEdit} className="btn-secondary">

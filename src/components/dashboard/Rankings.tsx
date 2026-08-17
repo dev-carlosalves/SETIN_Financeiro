@@ -4,7 +4,6 @@ import { formatCurrency } from '@/lib/utils'
 
 interface RankingItem {
   produto?: string
-  vendedor?: string
   categoria?: string
   quantidade?: number
   valor: number
@@ -12,28 +11,26 @@ interface RankingItem {
 
 interface RankingsProps {
   produtos: RankingItem[]
-  vendedores: RankingItem[]
   categorias: RankingItem[]
+  vendedores?: Array<{ vendedor: string; valor: number }>
 }
 
-function RankingList({
+function MetricDistribution({
   title,
   items,
   labelKey,
-  icon,
 }: {
   title: string
   items: RankingItem[]
-  labelKey: 'produto' | 'vendedor' | 'categoria'
-  icon: string
+  labelKey: 'produto' | 'categoria'
 }) {
-  if (items.length === 0) {
+  if (!items || items.length === 0) {
     return (
-      <div>
-        <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-1.5">
-          <span>{icon}</span> {title}
+      <div className="card">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">
+          {title}
         </h3>
-        <p className="text-xs text-gray-500">Sem dados</p>
+        <p className="text-xs text-zinc-600">Sem dados registrados até o momento.</p>
       </div>
     )
   }
@@ -41,27 +38,31 @@ function RankingList({
   const maxValue = items[0]?.valor || 1
 
   return (
-    <div>
-      <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-1.5">
-        <span>{icon}</span> {title}
+    <div className="card">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4">
+        {title}
       </h3>
-      <div className="space-y-2.5">
-        {items.slice(0, 5).map((item, idx) => (
-          <div key={idx}>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-300 flex items-center gap-1">
-                <span className="text-gray-500 w-4">{idx + 1}.</span>
-                <span className="truncate max-w-[120px]">{item[labelKey]}</span>
+      <div className="space-y-3.5">
+        {items.slice(0, 6).map((item, idx) => (
+          <div key={idx} className="space-y-1.5">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-zinc-200 font-medium flex items-center gap-2">
+                <span className="text-zinc-500 font-mono text-[10px] w-3">{idx + 1}.</span>
+                <span className="truncate max-w-[160px] sm:max-w-[200px]">{item[labelKey]}</span>
                 {item.quantidade !== undefined && (
-                  <span className="text-gray-500">({item.quantidade} un.)</span>
+                  <span className="text-zinc-500 font-mono text-[11px]">
+                    ({item.quantidade} un)
+                  </span>
                 )}
               </span>
-              <span className="text-gray-300 font-semibold">{formatCurrency(item.valor)}</span>
+              <span className="text-zinc-300 font-semibold font-mono">
+                {formatCurrency(item.valor)}
+              </span>
             </div>
-            <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full bg-indigo-600"
-                style={{ width: `${(item.valor / maxValue) * 100}%` }}
+                className="h-full rounded-full bg-emerald-500/80 transition-all duration-500"
+                style={{ width: `${Math.max(4, (item.valor / maxValue) * 100)}%` }}
               />
             </div>
           </div>
@@ -71,31 +72,19 @@ function RankingList({
   )
 }
 
-export default function Rankings({ produtos, vendedores, categorias }: RankingsProps) {
+export default function Rankings({ produtos, categorias }: RankingsProps) {
   return (
-    <div className="space-y-6">
-      <RankingList
-        title="Produtos mais vendidos"
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <MetricDistribution
+        title="Produtos Mais Vendidos"
         items={produtos}
         labelKey="produto"
-        icon="🏆"
       />
-      <div className="border-t border-gray-800 pt-6">
-        <RankingList
-          title="Ranking de vendedores"
-          items={vendedores}
-          labelKey="vendedor"
-          icon="⭐"
-        />
-      </div>
-      <div className="border-t border-gray-800 pt-6">
-        <RankingList
-          title="Despesas por categoria"
-          items={categorias}
-          labelKey="categoria"
-          icon="💸"
-        />
-      </div>
+      <MetricDistribution
+        title="Despesas por Categoria"
+        items={categorias}
+        labelKey="categoria"
+      />
     </div>
   )
 }

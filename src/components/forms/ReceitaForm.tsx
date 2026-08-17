@@ -25,8 +25,10 @@ export default function ReceitaForm({ nomeUsuario, onSuccess, editData, onCancel
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    setForm((f) => ({ ...f, responsavel: nomeUsuario }))
-  }, [nomeUsuario])
+    if (!editData) {
+      setForm((f) => ({ ...f, responsavel: nomeUsuario }))
+    }
+  }, [nomeUsuario, editData])
 
   useEffect(() => {
     if (editData) {
@@ -41,7 +43,7 @@ export default function ReceitaForm({ nomeUsuario, onSuccess, editData, onCancel
     }
   }, [editData, nomeUsuario])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
     setError('')
     setSuccess(false)
@@ -66,44 +68,73 @@ export default function ReceitaForm({ nomeUsuario, onSuccess, editData, onCancel
       })
       if (!res.ok) {
         const d = await res.json()
-        setError(d.error || 'Erro ao salvar.')
+        setError(d.error || 'Erro ao salvar receita.')
       } else {
         setSuccess(true)
         if (!editData) {
-          setForm({ data: todayISO(), tipo: 'patrocinio', descricao: '', valor: '', status: 'previsto', responsavel: nomeUsuario })
+          setForm({
+            data: todayISO(),
+            tipo: 'patrocinio',
+            descricao: '',
+            valor: '',
+            status: 'previsto',
+            responsavel: nomeUsuario,
+          })
         }
         onSuccess()
         setTimeout(() => setSuccess(false), 3000)
       }
     } catch {
-      setError('Erro de conexão.')
+      setError('Erro de conexão ao salvar receita.')
     }
     setLoading(false)
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="label">Data</label>
-          <input type="date" name="data" value={form.data} onChange={handleChange} className="input-field" />
+          <label className="label">Data de Entrada</label>
+          <input
+            type="date"
+            name="data"
+            value={form.data}
+            onChange={handleChange}
+            className="input-field"
+            required
+          />
         </div>
         <div>
-          <label className="label">Tipo</label>
-          <select name="tipo" value={form.tipo} onChange={handleChange} className="input-field">
+          <label className="label">Tipo de Receita</label>
+          <select
+            name="tipo"
+            value={form.tipo}
+            onChange={handleChange}
+            className="input-field"
+          >
             {TIPOS_RECEITA.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
             ))}
           </select>
         </div>
       </div>
 
       <div>
-        <label className="label">Descrição</label>
-        <input type="text" name="descricao" value={form.descricao} onChange={handleChange} className="input-field" placeholder="Ex.: Patrocínio da empresa XYZ" />
+        <label className="label">Descrição da Receita</label>
+        <input
+          type="text"
+          name="descricao"
+          value={form.descricao}
+          onChange={handleChange}
+          className="input-field"
+          placeholder="Ex: Patrocínio empresa Parceira, Doação da comissão"
+          required
+        />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label className="label">Valor (R$)</label>
           <input
@@ -116,29 +147,52 @@ export default function ReceitaForm({ nomeUsuario, onSuccess, editData, onCancel
             step="0.01"
             inputMode="decimal"
             placeholder="0,00"
+            required
           />
         </div>
         <div>
           <label className="label">Status</label>
-          <select name="status" value={form.status} onChange={handleChange} className="input-field">
+          <select
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            className="input-field"
+          >
             {STATUS_RECEITA.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
             ))}
           </select>
         </div>
+        <div>
+          <label className="label">Responsável</label>
+          <input
+            type="text"
+            name="responsavel"
+            value={form.responsavel}
+            onChange={handleChange}
+            className="input-field"
+            placeholder="Nome"
+            required
+          />
+        </div>
       </div>
 
-      <div>
-        <label className="label">Responsável</label>
-        <input type="text" name="responsavel" value={form.responsavel} onChange={handleChange} className="input-field" placeholder="Nome" />
-      </div>
+      {error && (
+        <div className="text-rose-400 text-xs bg-rose-950/40 border border-rose-800/40 rounded-lg px-3 py-2.5">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="text-emerald-400 text-xs bg-emerald-950/40 border border-emerald-800/40 rounded-lg px-3 py-2.5">
+          Receita registrada com sucesso.
+        </div>
+      )}
 
-      {error && <p className="text-red-400 text-sm bg-red-950/40 border border-red-800/50 rounded-xl px-3 py-2">{error}</p>}
-      {success && <p className="text-emerald-400 text-sm bg-emerald-950/40 border border-emerald-800/50 rounded-xl px-3 py-2">✓ Receita registrada com sucesso!</p>}
-
-      <div className="flex gap-2">
+      <div className="flex gap-2.5 pt-1">
         <button type="submit" disabled={loading} className="btn-primary flex-1">
-          {loading ? 'Salvando...' : editData ? 'Atualizar receita' : 'Registrar receita'}
+          {loading ? 'Processando...' : editData ? 'Salvar Alterações' : 'Lançar Receita'}
         </button>
         {editData && onCancelEdit && (
           <button type="button" onClick={onCancelEdit} className="btn-secondary">

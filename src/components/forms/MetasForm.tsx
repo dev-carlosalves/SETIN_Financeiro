@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { todayISO, formatCurrency } from '@/lib/utils'
+import { todayISO } from '@/lib/utils'
 
 interface Meta {
   id?: number
@@ -17,7 +17,6 @@ export default function MetasForm() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  // Load existing goals on mount
   useEffect(() => {
     fetch('/api/metas')
       .then((r) => r.json())
@@ -60,19 +59,16 @@ export default function MetasForm() {
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch {
-      setError('Erro ao salvar metas.')
+      setError('Erro ao salvar metas financeiras.')
     }
     setLoading(false)
   }
 
   return (
     <form onSubmit={handleSave} className="space-y-4">
-      <p className="text-xs text-gray-500">
-        Defina as metas financeiras. Salvar sobrescreve os valores anteriores.
-      </p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="label">Meta diária (hoje) — R$</label>
+          <label className="label">Meta Diária (Hoje) — R$</label>
           <input
             type="number"
             value={metaDiaria}
@@ -85,7 +81,7 @@ export default function MetasForm() {
           />
         </div>
         <div>
-          <label className="label">Meta total do evento — R$</label>
+          <label className="label">Meta Geral do Evento — R$</label>
           <input
             type="number"
             value={metaTotal}
@@ -99,11 +95,19 @@ export default function MetasForm() {
         </div>
       </div>
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
-      {success && <p className="text-emerald-400 text-sm">✓ Metas salvas!</p>}
+      {error && (
+        <div className="text-rose-400 text-xs bg-rose-950/40 border border-rose-800/40 rounded-lg px-3 py-2">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="text-emerald-400 text-xs bg-emerald-950/40 border border-emerald-800/40 rounded-lg px-3 py-2">
+          Metas atualizadas com sucesso.
+        </div>
+      )}
 
       <button type="submit" disabled={loading} className="btn-primary w-full">
-        {loading ? 'Salvando...' : 'Salvar metas'}
+        {loading ? 'Salvando...' : 'Salvar Metas'}
       </button>
     </form>
   )

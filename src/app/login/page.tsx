@@ -13,7 +13,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!nome.trim() || !senha) {
-      setError('Preencha todos os campos.')
+      setError('Por favor, informe seu nome e a senha de acesso.')
       return
     }
     setLoading(true)
@@ -26,45 +26,42 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || 'Senha incorreta.')
+        setError(data.error || 'Senha incorreta ou acesso negado.')
         setLoading(false)
         return
       }
       router.push('/visualizar')
       router.refresh()
     } catch {
-      setError('Erro de conexão. Tente novamente.')
+      setError('Erro ao conectar ao servidor. Verifique sua conexão.')
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      {/* Background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-indigo-950/30 via-gray-950 to-cyan-950/20 pointer-events-none" />
-
-      <div className="relative w-full max-w-sm">
-        {/* Logo / Header */}
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm">
+        {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 rounded-2xl bg-indigo-600 items-center justify-center mb-4 shadow-lg shadow-indigo-900/50">
-            <span className="text-white text-2xl font-black">S</span>
+          <div className="inline-flex w-12 h-12 rounded-xl bg-emerald-600/15 border border-emerald-500/30 items-center justify-center mb-3">
+            <span className="text-emerald-400 font-semibold text-sm tracking-wider">SET</span>
           </div>
-          <h1 className="text-2xl font-bold text-white">SETIN Financeiro</h1>
-          <p className="text-gray-500 text-sm mt-1">Sistema interno da equipe organizadora</p>
+          <h1 className="text-xl font-bold text-zinc-100 tracking-tight">SETIN Financeiro</h1>
+          <p className="text-zinc-500 text-xs mt-1">Controle de caixa e gestão financeira do evento</p>
         </div>
 
-        {/* Card */}
+        {/* Form Card */}
         <div className="card">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="nome" className="label">
-                Seu nome completo
+                Identificação do Usuário
               </label>
               <input
                 id="nome"
                 type="text"
                 autoComplete="name"
-                placeholder="Ex.: Pedro Henrique"
+                placeholder="Seu nome completo"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 className="input-field"
@@ -75,13 +72,13 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="senha" className="label">
-                Senha de acesso
+                Senha Compartilhada
               </label>
               <input
                 id="senha"
                 type="password"
                 autoComplete="current-password"
-                placeholder="Senha compartilhada da equipe"
+                placeholder="Senha de acesso da equipe"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 className="input-field"
@@ -91,7 +88,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="bg-red-950/50 border border-red-800 rounded-xl px-4 py-3 text-red-400 text-sm">
+              <div className="bg-rose-950/40 border border-rose-800/40 rounded-lg px-3.5 py-2.5 text-rose-300 text-xs">
                 {error}
               </div>
             )}
@@ -103,21 +100,18 @@ export default function LoginPage() {
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Entrando...
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  Verificando...
                 </span>
               ) : (
-                'Entrar'
+                'Acessar Sistema'
               )}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-gray-600 text-xs mt-6">
-          SETIN — Acesso restrito à equipe organizadora
+        <p className="text-center text-zinc-600 text-[11px] mt-6">
+          SETIN — Uso restrito aos membros da comissão organizadora
         </p>
       </div>
     </div>

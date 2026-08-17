@@ -26,12 +26,6 @@ interface FeedRecenteProps {
   onEdit: (item: FeedItem) => void
 }
 
-const TIPO_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  venda: { label: 'Venda', color: 'text-cyan-300', bg: 'bg-cyan-950/40 border-cyan-800/50' },
-  receita: { label: 'Receita', color: 'text-emerald-300', bg: 'bg-emerald-950/40 border-emerald-800/50' },
-  despesa: { label: 'Despesa', color: 'text-red-300', bg: 'bg-red-950/40 border-red-800/50' },
-}
-
 function getTipoReceitaLabel(tipo: string) {
   return TIPOS_RECEITA.find((t) => t.value === tipo)?.label || tipo
 }
@@ -48,7 +42,7 @@ export default function FeedRecente({ items, onRefresh, onEdit }: FeedRecentePro
       await fetch(`/api/${endpoint}/${item.id}`, { method: 'DELETE' })
       onRefresh()
     } catch {
-      alert('Erro ao excluir.')
+      alert('Erro ao excluir lançamento.')
     }
     setDeleting(null)
   }, [onRefresh])
@@ -72,80 +66,90 @@ export default function FeedRecente({ items, onRefresh, onEdit }: FeedRecentePro
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <p className="text-4xl mb-2">📋</p>
-        <p className="text-sm">Nenhum lançamento ainda. Comece inserindo uma venda!</p>
+      <div className="text-center py-10 text-zinc-500">
+        <p className="text-sm font-medium text-zinc-400">Nenhum lançamento registrado</p>
+        <p className="text-xs text-zinc-600 mt-1">Os novos registros aparecerão nesta lista em tempo real.</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {items.map((item) => {
-        const tipoInfo = TIPO_LABELS[item._tipo]
         const isPending = item._tipo === 'despesa' && item.status === 'pendente'
         const isForecast = item._tipo === 'receita' && item.status === 'previsto'
         const canMarkStatus = isPending || isForecast
 
+        const typeBadge =
+          item._tipo === 'venda'
+            ? 'bg-zinc-800 text-zinc-300 border-zinc-700'
+            : item._tipo === 'receita'
+            ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/40'
+            : 'bg-rose-950/60 text-rose-300 border-rose-800/40'
+
+        const statusBadge =
+          item.status === 'pago' || item.status === 'recebido'
+            ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/30'
+            : 'bg-amber-950/40 text-amber-400 border-amber-800/30'
+
         return (
           <div
             key={`${item._tipo}-${item.id}`}
-            className={`border rounded-xl px-4 py-3 ${tipoInfo.bg}`}
+            className="p-3.5 rounded-lg bg-zinc-950/60 border border-zinc-800/80 hover:border-zinc-700/80 transition-colors"
           >
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-gray-900/50 ${tipoInfo.color}`}>
-                    {tipoInfo.label}
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span className={`badge uppercase text-[10px] tracking-wider font-semibold ${typeBadge}`}>
+                    {item._tipo}
                   </span>
                   {item.status && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      item.status === 'pago' || item.status === 'recebido'
-                        ? 'bg-emerald-900/50 text-emerald-400'
-                        : 'bg-yellow-900/50 text-yellow-400'
-                    }`}>
-                      {item.status === 'pago' ? 'Pago' : item.status === 'recebido' ? 'Recebido' : item.status === 'pendente' ? 'Pendente' : 'Previsto'}
+                    <span className={`badge uppercase text-[10px] tracking-wider ${statusBadge}`}>
+                      {item.status}
                     </span>
                   )}
-                  <span className="text-xs text-gray-500">{formatDate(item.data)}</span>
+                  <span className="text-xs text-zinc-500 font-mono">{formatDate(item.data)}</span>
                 </div>
 
-                <p className="text-sm text-gray-200 truncate">
+                <p className="text-xs sm:text-sm font-medium text-zinc-200 truncate">
                   {item._tipo === 'venda'
-                    ? `${item.produto} × ${item.quantidade} — ${item.vendedor}`
+                    ? `${item.produto} (qtd: ${item.quantidade}) • ${item.vendedor}`
                     : item._tipo === 'receita'
-                    ? `${getTipoReceitaLabel(item.tipo || '')} · ${item.descricao}`
-                    : `${item.categoria} · ${item.descricao}`}
+                    ? `${getTipoReceitaLabel(item.tipo || '')} — ${item.descricao}`
+                    : `${item.categoria} — ${item.descricao}`}
                 </p>
 
-                <p className={`text-base font-bold mt-1 ${
-                  item._tipo === 'despesa' ? 'text-red-400' : 'text-emerald-400'
+                <p className={`text-sm font-semibold mt-1 font-mono ${
+                  item._tipo === 'despesa' ? 'text-rose-400' : 'text-emerald-400'
                 }`}>
-                  {item._tipo === 'despesa' ? '−' : '+'}{formatCurrency(item.valor)}
+                  {item._tipo === 'despesa' ? '− ' : '+ '}{formatCurrency(item.valor)}
                 </p>
               </div>
 
-              {/* Actions */}
-              <div className="flex flex-col gap-1.5 shrink-0">
+              {/* Action buttons */}
+              <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
                 {canMarkStatus && (
                   <button
                     onClick={() => handleMarkStatus(item)}
                     disabled={markingStatus === item.id}
-                    className="btn-success text-xs py-1.5 px-2.5"
+                    className="text-xs font-medium py-1 px-2.5 rounded bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800/50 transition-colors"
+                    title={item._tipo === 'despesa' ? 'Confirmar pagamento' : 'Confirmar recebimento'}
                   >
-                    {markingStatus === item.id ? '...' : item._tipo === 'despesa' ? '✓ Pago' : '✓ Recebido'}
+                    {markingStatus === item.id ? '...' : item._tipo === 'despesa' ? 'Pagar' : 'Receber'}
                   </button>
                 )}
                 <button
                   onClick={() => onEdit(item)}
-                  className="btn-secondary text-xs py-1.5 px-2.5"
+                  className="text-xs font-medium py-1 px-2 rounded bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/60 transition-colors"
+                  title="Editar"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => handleDelete(item)}
                   disabled={deleting === item.id}
-                  className="btn-danger text-xs py-1.5 px-2.5"
+                  className="text-xs font-medium py-1 px-2 rounded bg-zinc-900 hover:bg-rose-950/80 text-zinc-400 hover:text-rose-300 border border-zinc-800 hover:border-rose-800/40 transition-colors"
+                  title="Excluir"
                 >
                   {deleting === item.id ? '...' : 'Excluir'}
                 </button>

@@ -36,7 +36,6 @@ export default function InserirPage() {
   const [editItem, setEditItem] = useState<FeedItem | null>(null)
   const router = useRouter()
 
-  // Get session user name
   useEffect(() => {
     fetch('/api/auth/session')
       .then((r) => r.json())
@@ -81,109 +80,144 @@ export default function InserirPage() {
     refreshFeed()
   }, [refreshFeed])
 
-  const tabs: { key: Tab; label: string; emoji: string }[] = [
-    { key: 'venda', label: 'Venda', emoji: '🛒' },
-    { key: 'receita', label: 'Receita', emoji: '💰' },
-    { key: 'despesa', label: 'Despesa', emoji: '💸' },
+  const tabs: { key: Tab; label: string; desc: string }[] = [
+    { key: 'venda', label: 'Venda de Produtos', desc: 'Café, Sanduíches e itens' },
+    { key: 'receita', label: 'Outras Receitas', desc: 'Patrocínios, inscrições e doações' },
+    { key: 'despesa', label: 'Despesas e Custos', desc: 'Controle de saídas e fornecedores' },
   ]
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-12">
       <Navbar nome={nomeUsuario} />
 
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-5">
-        {/* Form section */}
-        <div className="card">
-          {editItem && (
-            <div className="mb-4 bg-indigo-950/40 border border-indigo-800/50 rounded-xl px-4 py-2 text-sm text-indigo-300">
-              ✏️ Editando lançamento — clique em Cancelar para descartar.
-            </div>
-          )}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold text-zinc-100 tracking-tight">Registro de Movimentações</h1>
+          <p className="text-xs text-zinc-400 mt-1">
+            Lance entradas, saídas e acompanhe os registros recentes da equipe em tempo real.
+          </p>
+        </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1.5 bg-gray-950 p-1 rounded-xl mb-5 border border-gray-800">
-            {tabs.map((tab) => (
+        {/* 2-Column Responsive Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Main Form Column (7 cols) */}
+          <div className="lg:col-span-7 space-y-5">
+            <div className="card">
+              {/* Edit Mode Notice */}
+              {editItem && (
+                <div className="mb-4 bg-amber-950/40 border border-amber-800/40 rounded-lg p-3 flex items-center justify-between text-xs text-amber-300">
+                  <span>Modo de edição ativado para o item selecionado.</span>
+                  <button onClick={handleCancelEdit} className="underline font-medium hover:text-amber-200">
+                    Descartar edição
+                  </button>
+                </div>
+              )}
+
+              {/* Tab Navigation (Left aligned & structured) */}
+              <div className="border-b border-zinc-800/80 pb-4 mb-5">
+                <div className="flex flex-wrap gap-2">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => {
+                        setActiveTab(tab.key)
+                        if (editItem && editItem._tipo !== tab.key) {
+                          setEditItem(null)
+                        }
+                      }}
+                      className={`px-4 py-2 rounded-lg text-xs font-medium transition-all text-left ${
+                        activeTab === tab.key
+                          ? 'bg-emerald-600 text-white shadow-sm font-semibold'
+                          : 'bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-zinc-800'
+                      }`}
+                    >
+                      <div>{tab.label}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Form Content */}
+              <div>
+                {activeTab === 'venda' && (
+                  <VendaForm
+                    nomeUsuario={nomeUsuario}
+                    onSuccess={handleSuccess}
+                    editData={editItem?._tipo === 'venda' ? (editItem as unknown as Record<string, unknown>) : null}
+                    onCancelEdit={editItem ? handleCancelEdit : undefined}
+                  />
+                )}
+                {activeTab === 'receita' && (
+                  <ReceitaForm
+                    nomeUsuario={nomeUsuario}
+                    onSuccess={handleSuccess}
+                    editData={editItem?._tipo === 'receita' ? (editItem as unknown as Record<string, unknown>) : null}
+                    onCancelEdit={editItem ? handleCancelEdit : undefined}
+                  />
+                )}
+                {activeTab === 'despesa' && (
+                  <DespesaForm
+                    nomeUsuario={nomeUsuario}
+                    onSuccess={handleSuccess}
+                    editData={editItem?._tipo === 'despesa' ? (editItem as unknown as Record<string, unknown>) : null}
+                    onCancelEdit={editItem ? handleCancelEdit : undefined}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Metas Accordion */}
+            <div className="card">
               <button
-                key={tab.key}
-                onClick={() => { setActiveTab(tab.key); if (!editItem) {} }}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 flex items-center justify-center gap-1.5 ${
-                  activeTab === tab.key ? 'tab-active' : 'tab-inactive'
-                }`}
+                onClick={() => setMetasOpen(!metasOpen)}
+                className="w-full flex items-center justify-between text-left group"
               >
-                <span>{tab.emoji}</span>
-                <span>{tab.label}</span>
+                <div>
+                  <h2 className="text-sm font-medium text-zinc-200 group-hover:text-zinc-100 transition-colors">
+                    Configuração de Metas Financeiras
+                  </h2>
+                  <p className="text-xs text-zinc-500">Defina metas diárias ou gerais para o evento</p>
+                </div>
+                <span className="text-xs text-zinc-500 font-mono px-2 py-1 rounded bg-zinc-800 border border-zinc-700/50">
+                  {metasOpen ? 'Ocultar' : 'Configurar'}
+                </span>
               </button>
-            ))}
+              {metasOpen && (
+                <div className="mt-4 pt-4 border-t border-zinc-800/80">
+                  <MetasForm />
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Active form */}
-          {activeTab === 'venda' && (
-            <VendaForm
-              nomeUsuario={nomeUsuario}
-              onSuccess={handleSuccess}
-              editData={editItem?._tipo === 'venda' ? (editItem as unknown as Record<string, unknown>) : null}
-              onCancelEdit={editItem ? handleCancelEdit : undefined}
-            />
-          )}
-          {activeTab === 'receita' && (
-            <ReceitaForm
-              nomeUsuario={nomeUsuario}
-              onSuccess={handleSuccess}
-              editData={editItem?._tipo === 'receita' ? (editItem as unknown as Record<string, unknown>) : null}
-              onCancelEdit={editItem ? handleCancelEdit : undefined}
-            />
-          )}
-          {activeTab === 'despesa' && (
-            <DespesaForm
-              nomeUsuario={nomeUsuario}
-              onSuccess={handleSuccess}
-              editData={editItem?._tipo === 'despesa' ? (editItem as unknown as Record<string, unknown>) : null}
-              onCancelEdit={editItem ? handleCancelEdit : undefined}
-            />
-          )}
-        </div>
+          {/* Right Feed Column (5 cols) */}
+          <div className="lg:col-span-5">
+            <div className="card sticky top-20">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-4">
+                <div>
+                  <h2 className="text-sm font-semibold text-zinc-200">Últimos Lançamentos</h2>
+                  <p className="text-xs text-zinc-500">Registros recentes da equipe</p>
+                </div>
+                <button
+                  onClick={refreshFeed}
+                  disabled={feedLoading}
+                  className="btn-ghost"
+                  title="Recarregar lista"
+                >
+                  {feedLoading ? 'Atualizando...' : 'Atualizar'}
+                </button>
+              </div>
 
-        {/* Metas section (collapsible) */}
-        <div className="card">
-          <button
-            onClick={() => setMetasOpen(!metasOpen)}
-            className="w-full flex items-center justify-between text-left"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🎯</span>
-              <span className="font-semibold text-gray-200">Metas</span>
+              {feedLoading && feedItems.length === 0 ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-emerald-500 border-t-transparent" />
+                </div>
+              ) : (
+                <FeedRecente items={feedItems} onRefresh={refreshFeed} onEdit={handleEdit} />
+              )}
             </div>
-            <span className={`text-gray-400 transition-transform duration-200 ${metasOpen ? 'rotate-180' : ''}`}>
-              ▼
-            </span>
-          </button>
-          {metasOpen && (
-            <div className="mt-4 pt-4 border-t border-gray-800">
-              <MetasForm />
-            </div>
-          )}
-        </div>
-
-        {/* Feed */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-200 flex items-center gap-2">
-              <span>📋</span> Lançamentos recentes
-            </h2>
-            <button
-              onClick={refreshFeed}
-              className="text-xs text-gray-500 hover:text-gray-300 px-2 py-1 rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              Atualizar
-            </button>
           </div>
-          {feedLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500" />
-            </div>
-          ) : (
-            <FeedRecente items={feedItems} onRefresh={refreshFeed} onEdit={handleEdit} />
-          )}
         </div>
       </main>
     </div>

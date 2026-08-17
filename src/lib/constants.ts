@@ -1,27 +1,8 @@
 // Lista de produtos para vendas
 export const PRODUTOS: string[] = [
-  'Camiseta',
-  'Ingresso avulso',
-  'Copo personalizado',
-  'Kit SETIN',
-  'Caneca',
-  'Adesivo',
-  'Livro/Apostila',
+  'Café',
+  'Sanduíche',
   'Outro',
-]
-
-// Lista de categorias de despesa
-export const CATEGORIAS_DESPESA: string[] = [
-  'Espaço/aluguel',
-  'Alimentação',
-  'Material gráfico',
-  'Transporte',
-  'Brindes/premiação',
-  'Tecnologia',
-  'Comunicação/Marketing',
-  'Segurança',
-  'Limpeza',
-  'Outros',
 ]
 
 // Tipos de receita
@@ -36,8 +17,10 @@ export const TIPOS_RECEITA = [
 export const FORMAS_PAGAMENTO = [
   'Pix',
   'Dinheiro',
-  'Cartão',
+  'Cartão de Crédito',
+  'Cartão de Débito',
   'Boleto',
+  'Transferência',
 ] as const
 
 // Status de despesa

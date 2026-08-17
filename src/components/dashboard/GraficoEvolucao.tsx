@@ -27,13 +27,20 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || !payload.length) return null
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm shadow-xl">
-      <p className="text-gray-400 mb-2">{label}</p>
-      {payload.map((p) => (
-        <p key={p.name} style={{ color: p.color }} className="font-semibold">
-          {p.name}: {formatCurrency(p.value)}
-        </p>
-      ))}
+    <div className="bg-zinc-900 border border-zinc-700/80 rounded-lg p-3 text-xs shadow-xl backdrop-blur-md">
+      <p className="text-zinc-400 font-medium mb-1.5">{label}</p>
+      <div className="space-y-1">
+        {payload.map((p) => (
+          <div key={p.name} className="flex items-center justify-between gap-4">
+            <span className="text-zinc-300 font-medium">
+              {p.name === 'saldoReal' ? 'Saldo Real' : 'Saldo Projetado'}
+            </span>
+            <span style={{ color: p.color }} className="font-semibold font-mono">
+              {formatCurrency(p.value)}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -41,8 +48,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 export default function GraficoEvolucao({ data }: { data: ChartPoint[] }) {
   if (!data || data.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 text-sm">
-        Sem dados suficientes para exibir o gráfico.
+      <div className="text-center py-12 text-zinc-500 text-xs">
+        Sem movimentações suficientes para gerar o gráfico histórico.
       </div>
     )
   }
@@ -53,46 +60,54 @@ export default function GraficoEvolucao({ data }: { data: ChartPoint[] }) {
   }))
 
   return (
-    <ResponsiveContainer width="100%" height={240}>
-      <LineChart data={formattedData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-        <XAxis
-          dataKey="dateLabel"
-          tick={{ fill: '#6b7280', fontSize: 11 }}
-          tickLine={false}
-          axisLine={false}
-        />
-        <YAxis
-          tick={{ fill: '#6b7280', fontSize: 11 }}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`}
-          width={55}
-        />
-        <Tooltip content={<CustomTooltip />} />
-        <Legend
-          wrapperStyle={{ color: '#9ca3af', fontSize: 12 }}
-          formatter={(value) => (value === 'saldoReal' ? 'Saldo Real' : 'Saldo Projetado')}
-        />
-        <Line
-          type="monotone"
-          dataKey="saldoReal"
-          name="saldoReal"
-          stroke="#6366f1"
-          strokeWidth={2.5}
-          dot={{ fill: '#6366f1', r: 3 }}
-          activeDot={{ r: 5 }}
-        />
-        <Line
-          type="monotone"
-          dataKey="saldoProjetado"
-          name="saldoProjetado"
-          stroke="#22d3ee"
-          strokeWidth={2}
-          strokeDasharray="5 5"
-          dot={false}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="w-full h-64 pt-2">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={formattedData} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" opacity={0.6} />
+          <XAxis
+            dataKey="dateLabel"
+            tick={{ fill: '#71717a', fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            tick={{ fill: '#71717a', fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => `R$${v}`}
+            width={65}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend
+            verticalAlign="top"
+            align="right"
+            wrapperStyle={{ paddingBottom: 12, fontSize: 11 }}
+            formatter={(value) => (
+              <span className="text-zinc-400 font-medium">
+                {value === 'saldoReal' ? 'Saldo Real' : 'Saldo Projetado'}
+              </span>
+            )}
+          />
+          <Line
+            type="monotone"
+            dataKey="saldoReal"
+            name="saldoReal"
+            stroke="#10b981"
+            strokeWidth={2.5}
+            dot={{ fill: '#10b981', r: 3 }}
+            activeDot={{ r: 5 }}
+          />
+          <Line
+            type="monotone"
+            dataKey="saldoProjetado"
+            name="saldoProjetado"
+            stroke="#71717a"
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
+            dot={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   )
 }

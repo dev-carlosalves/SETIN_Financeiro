@@ -16,50 +16,62 @@ export default function Navbar({ nome }: { nome?: string }) {
   }
 
   return (
-    <nav className="sticky top-0 z-50 bg-gray-950/90 backdrop-blur-sm border-b border-gray-800">
-      <div className="max-w-5xl mx-auto px-4">
+    <nav className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/80">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <span className="text-white text-xs font-bold">S</span>
+          {/* Brand */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-600/15 border border-emerald-500/30 flex items-center justify-center">
+              <span className="text-emerald-400 font-semibold text-xs tracking-wider">SET</span>
             </div>
-            <span className="font-bold text-white text-sm hidden sm:block">SETIN Financeiro</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-zinc-100 text-sm tracking-tight">SETIN</span>
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/50">
+                  Financeiro
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1.5 bg-gray-900 p-1 rounded-xl border border-gray-800">
+          {/* Navigation Links */}
+          <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800">
             <Link
               href="/inserir"
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                pathname.startsWith('/inserir') ? 'tab-active' : 'tab-inactive'
+              className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                pathname.startsWith('/inserir')
+                  ? 'bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/60'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
               }`}
             >
-              Inserir
+              Inserir Lançamento
             </Link>
             <Link
               href="/visualizar"
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                pathname.startsWith('/visualizar') ? 'tab-active' : 'tab-inactive'
+              className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                pathname.startsWith('/visualizar')
+                  ? 'bg-zinc-800 text-zinc-100 shadow-sm border border-zinc-700/60'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
               }`}
             >
-              Visualizar
+              Painel Geral
             </Link>
           </div>
 
-          {/* User + Logout */}
-          <div className="flex items-center gap-2">
+          {/* User profile & action */}
+          <div className="flex items-center gap-3">
             {nome && (
-              <span className="text-xs text-gray-400 hidden sm:block truncate max-w-[100px]">
-                {nome}
-              </span>
+              <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-400">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="font-medium text-zinc-300 max-w-[140px] truncate">{nome}</span>
+              </div>
             )}
             <button
               onClick={handleLogout}
               disabled={loggingOut}
-              className="text-xs text-gray-500 hover:text-red-400 transition-colors px-2 py-1.5 rounded-lg hover:bg-gray-800"
+              className="text-xs text-zinc-400 hover:text-rose-400 transition-colors px-2.5 py-1.5 rounded-md hover:bg-zinc-900 border border-transparent hover:border-zinc-800"
             >
-              Sair
+              {loggingOut ? 'Saindo...' : 'Encerrar sessão'}
             </button>
           </div>
         </div>

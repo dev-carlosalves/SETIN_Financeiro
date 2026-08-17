@@ -59,94 +59,97 @@ export default function VisualizarPage() {
 
   useEffect(() => {
     fetchDashboard()
-    // Auto-refresh every 60 seconds
     const interval = setInterval(fetchDashboard, 60000)
     return () => clearInterval(interval)
   }, [fetchDashboard])
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-16">
       <Navbar nome={nomeUsuario} />
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-800/80">
           <div>
-            <h1 className="text-lg font-bold text-white">Painel Financeiro</h1>
+            <h1 className="text-xl font-semibold text-zinc-100 tracking-tight">Painel de Acompanhamento Financeiro</h1>
             {lastUpdated && (
-              <p className="text-xs text-gray-500">
-                Atualizado às {lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Última atualização realizada às{' '}
+                <span className="font-mono text-zinc-300">
+                  {lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
               </p>
             )}
           </div>
-          <button
-            onClick={fetchDashboard}
-            className="btn-secondary text-xs flex items-center gap-1.5"
-          >
-            <span className="text-sm">↻</span> Atualizar
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchDashboard}
+              disabled={loading}
+              className="btn-secondary text-xs"
+            >
+              {loading ? 'Atualizando...' : 'Atualizar Dados'}
+            </button>
+          </div>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500" />
+        {loading && !data ? (
+          <div className="flex justify-center py-24">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-emerald-500 border-t-transparent" />
           </div>
         ) : data ? (
           <>
-            {/* Summary Cards */}
+            {/* Top Metric Cards */}
             <ResumoCards data={data.cards} />
 
-            {/* Meta Progress */}
+            {/* Metas Section */}
             {(data.metas.diaria || data.metas.total) && (
               <div className="card">
-                <h2 className="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
-                  <span>🎯</span> Progresso das metas
-                </h2>
+                <div className="mb-4">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    Acompanhamento de Metas
+                  </h2>
+                </div>
                 <ProgressoMetas diaria={data.metas.diaria} total={data.metas.total} />
               </div>
             )}
 
-            {/* Chart */}
+            {/* Financial Flow Evolution Chart */}
             <div className="card">
-              <h2 className="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
-                <span>📈</span> Evolução do saldo
-              </h2>
-              <GraficoEvolucao data={data.chartData} />
-              <div className="flex gap-4 mt-3 justify-center">
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <div className="w-6 h-0.5 bg-indigo-500" />
-                  Saldo real
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <div className="w-6 h-0.5 bg-cyan-500 border-t-2 border-dashed border-cyan-500" />
-                  Saldo projetado
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    Evolução do Saldo Acumulado
+                  </h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    Comparativo entre Saldo Real liquidado e Saldo Projetado
+                  </p>
                 </div>
               </div>
+              <GraficoEvolucao data={data.chartData} />
             </div>
 
-            {/* Rankings */}
-            <div className="card">
-              <h2 className="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
-                <span>🏆</span> Rankings
-              </h2>
-              <Rankings
-                produtos={data.rankings.produtos}
-                vendedores={data.rankings.vendedores}
-                categorias={data.rankings.categorias}
-              />
-            </div>
+            {/* Financial Distribution (Products & Category Expenses - Seller ranking removed) */}
+            <Rankings
+              produtos={data.rankings.produtos}
+              categorias={data.rankings.categorias}
+            />
 
-            {/* History Table */}
+            {/* Complete History Table */}
             <div className="card">
-              <h2 className="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
-                <span>📊</span> Histórico completo
-              </h2>
+              <div className="mb-4">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                  Extrato e Histórico de Transações
+                </h2>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Filtre e exporte todas as vendas, receitas e despesas registradas
+                </p>
+              </div>
               <TabelaHistorico />
             </div>
           </>
         ) : (
-          <div className="text-center py-20 text-gray-500">
-            Erro ao carregar dados. Verifique a conexão com o banco.
+          <div className="card text-center py-16 text-zinc-500 text-sm">
+            Não foi possível carregar os dados financeiros no momento.
           </div>
         )}
       </main>
