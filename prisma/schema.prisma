@@ -18,6 +18,8 @@ model vendas {
   valor_unitario Decimal  @db.Decimal(10, 2)
   valor_total    Decimal  @db.Decimal(10, 2)
   cliente        String?
+  equipe         Int      @default(1)
+  forma_pagamento String  @default("dinheiro")
   criado_em      DateTime @default(now())
 }
 

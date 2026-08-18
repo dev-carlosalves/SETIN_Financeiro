@@ -2,6 +2,7 @@ import type { SessionOptions } from 'iron-session'
 
 export interface SessionData {
   nome: string
+  equipe: number
   loggedIn: boolean
 }
 

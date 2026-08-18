@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const response = NextResponse.json({})
   const session = await getIronSession<SessionData>(request, response, getSessionOptions())
   if (!session.loggedIn) {
-    return NextResponse.json({ loggedIn: false, nome: null })
+    return NextResponse.json({ loggedIn: false, nome: null, equipe: null })
   }
-  return NextResponse.json({ loggedIn: true, nome: session.nome })
+  return NextResponse.json({ loggedIn: true, nome: session.nome, equipe: session.equipe || 1 })
 }

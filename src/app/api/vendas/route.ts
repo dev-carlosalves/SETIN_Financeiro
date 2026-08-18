@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { data, vendedor, produto, quantidade, valor_unitario, cliente } = body
+    const { data, vendedor, produto, quantidade, valor_unitario, cliente, equipe, forma_pagamento } = body
 
     if (!data || !vendedor || !produto || !quantidade || valor_unitario === undefined) {
       return NextResponse.json({ error: 'Campos obrigatórios faltando.' }, { status: 400 })
@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     const valor_total = qty * unitPrice
+    const equipeNum = parseInt(equipe) || 1
 
     const venda = await prisma.vendas.create({
       data: {
@@ -40,6 +41,8 @@ export async function POST(request: NextRequest) {
         valor_unitario: unitPrice,
         valor_total,
         cliente: cliente ? String(cliente).trim() : null,
+        equipe: equipeNum,
+        forma_pagamento: forma_pagamento ? String(forma_pagamento).trim() : 'dinheiro',
       },
     })
 

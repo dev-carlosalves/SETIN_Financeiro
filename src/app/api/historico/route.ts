@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const dataInicio = searchParams.get('dataInicio')
     const dataFim = searchParams.get('dataFim')
+    const equipeFilter = searchParams.get('equipe')
     const exportCsv = searchParams.get('export') === 'csv'
 
     const dateFilter: { gte?: Date; lte?: Date } = {}
@@ -35,6 +36,8 @@ export async function GET(request: NextRequest) {
       produto?: string
       categoria?: string
       tipo_receita?: string
+      equipe?: number
+      forma_pagamento?: string
       criado_em: Date
     }> = []
 
@@ -44,6 +47,7 @@ export async function GET(request: NextRequest) {
       if (Object.keys(dateFilter).length > 0) whereVenda.data = dateFilter
       if (produto) whereVenda.produto = { contains: produto, mode: 'insensitive' }
       if (responsavel) whereVenda.vendedor = { contains: responsavel, mode: 'insensitive' }
+      if (equipeFilter) whereVenda.equipe = parseInt(equipeFilter)
 
       const vendas = await prisma.vendas.findMany({
         where: whereVenda,
@@ -58,6 +62,8 @@ export async function GET(request: NextRequest) {
           valor: toNumber(v.valor_total),
           vendedor: v.vendedor,
           produto: v.produto,
+          equipe: v.equipe,
+          forma_pagamento: v.forma_pagamento,
           criado_em: v.criado_em,
         })
       })
@@ -119,7 +125,7 @@ export async function GET(request: NextRequest) {
     items.sort((a, b) => b.criado_em.getTime() - a.criado_em.getTime())
 
     if (exportCsv) {
-      const headers = ['Tipo', 'Data', 'Descrição', 'Valor (R$)', 'Status', 'Responsável / Vendedor', 'Produto / Categoria']
+      const headers = ['Tipo', 'Data', 'Descrição', 'Valor (R$)', 'Status', 'Responsável / Vendedor', 'Produto / Categoria', 'Equipe', 'Pagamento']
       const rows = items.map((item) => {
         const dataObj = new Date(item.data)
         const dia = String(dataObj.getUTCDate()).padStart(2, '0')
@@ -135,6 +141,8 @@ export async function GET(request: NextRequest) {
           item.status ? item.status.toUpperCase() : 'N/A',
           item.responsavel || item.vendedor || '',
           item.produto || item.categoria || item.tipo_receita || '',
+          item.equipe ? `Equipe ${item.equipe}` : '',
+          item.forma_pagamento || '',
         ]
       })
 

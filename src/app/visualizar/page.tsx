@@ -25,6 +25,7 @@ interface DashboardData {
     produtos: Array<{ produto: string; quantidade: number; valor: number }>
     vendedores: Array<{ vendedor: string; valor: number }>
     categorias: Array<{ categoria: string; valor: number }>
+    equipes: Array<{ equipe: number; total: number; porDia: Record<string, number> }>
   }
 }
 
@@ -32,6 +33,7 @@ export default function VisualizarPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [nomeUsuario, setNomeUsuario] = useState('')
+  const [equipeUsuario, setEquipeUsuario] = useState<number | undefined>(undefined)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const router = useRouter()
 
@@ -40,7 +42,10 @@ export default function VisualizarPage() {
       .then((r) => r.json())
       .then((d) => {
         if (!d.loggedIn) router.push('/login')
-        else setNomeUsuario(d.nome || '')
+        else {
+          setNomeUsuario(d.nome || '')
+          setEquipeUsuario(d.equipe || undefined)
+        }
       })
       .catch(() => router.push('/login'))
   }, [router])
@@ -65,7 +70,7 @@ export default function VisualizarPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-16">
-      <Navbar nome={nomeUsuario} />
+      <Navbar nome={nomeUsuario} equipe={equipeUsuario} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
         {/* Page Header */}
@@ -128,10 +133,11 @@ export default function VisualizarPage() {
               <GraficoEvolucao data={data.chartData} />
             </div>
 
-            {/* Financial Distribution (Products & Category Expenses - Seller ranking removed) */}
+            {/* Financial Distribution (Products, Category Expenses & Team Rankings) */}
             <Rankings
               produtos={data.rankings.produtos}
               categorias={data.rankings.categorias}
+              equipes={data.rankings.equipes}
             />
 
             {/* Complete History Table */}

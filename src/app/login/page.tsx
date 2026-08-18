@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { EQUIPES } from '@/lib/constants'
 
 export default function LoginPage() {
   const [nome, setNome] = useState('')
+  const [equipe, setEquipe] = useState<number | null>(null)
   const [senha, setSenha] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -13,8 +15,16 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!nome.trim() || !senha) {
-      setError('Por favor, informe seu nome e a senha de acesso.')
+    if (!nome.trim()) {
+      setError('Por favor, informe seu nome.')
+      return
+    }
+    if (!equipe) {
+      setError('Por favor, selecione a sua equipe.')
+      return
+    }
+    if (!senha) {
+      setError('Por favor, informe a senha de acesso.')
       return
     }
     setLoading(true)
@@ -23,7 +33,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, senha }),
+        body: JSON.stringify({ nome, equipe, senha }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -69,6 +79,28 @@ export default function LoginPage() {
                 disabled={loading}
                 required
               />
+            </div>
+
+            {/* Seletor de Equipe */}
+            <div>
+              <label className="label">Equipe</label>
+              <div className="grid grid-cols-4 gap-2">
+                {EQUIPES.map((eq) => (
+                  <button
+                    key={eq}
+                    type="button"
+                    onClick={() => { setEquipe(eq); setError('') }}
+                    disabled={loading}
+                    className={`py-2.5 px-3 rounded-lg text-sm font-semibold border-2 transition-all ${
+                      equipe === eq
+                        ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300 shadow-sm shadow-emerald-500/10'
+                        : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600'
+                    }`}
+                  >
+                    {eq}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>

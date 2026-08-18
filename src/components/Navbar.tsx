@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 
-export default function Navbar({ nome }: { nome?: string }) {
+export default function Navbar({ nome, equipe }: { nome?: string; equipe?: number }) {
   const pathname = usePathname()
   const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
@@ -84,6 +84,11 @@ export default function Navbar({ nome }: { nome?: string }) {
               <div className="flex items-center gap-2 text-xs text-zinc-400">
                 <div className="w-2 h-2 rounded-full bg-emerald-500" />
                 <span className="font-medium text-zinc-300 max-w-[140px] truncate">{nome}</span>
+                {equipe && (
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
+                    EQ {equipe}
+                  </span>
+                )}
               </div>
             )}
             <button
@@ -136,6 +141,11 @@ export default function Navbar({ nome }: { nome?: string }) {
                 <div className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg bg-zinc-900/60 border border-zinc-800/80 text-xs text-zinc-300">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                   <span className="truncate">Operador: <strong className="font-semibold text-zinc-100">{nome}</strong></span>
+                  {equipe && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 shrink-0">
+                      EQ {equipe}
+                    </span>
+                  )}
                 </div>
               )}
 

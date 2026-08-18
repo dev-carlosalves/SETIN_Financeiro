@@ -1,24 +1,38 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { PRODUTOS } from '@/lib/constants'
+import { PRODUTOS, FORMAS_PAGAMENTO_VENDA } from '@/lib/constants'
 import { todayISO, formatCurrency } from '@/lib/utils'
 
 interface VendaFormProps {
   nomeUsuario: string
+  equipeUsuario: number
   onSuccess: () => void
   editData?: Record<string, unknown> | null
   onCancelEdit?: () => void
 }
 
-export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEdit }: VendaFormProps) {
-  const [form, setForm] = useState({
+interface FormState {
+  data: string
+  vendedor: string
+  produto: string
+  quantidade: string
+  valor_unitario: string
+  cliente: string
+  equipe: number
+  forma_pagamento: string
+}
+
+export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editData, onCancelEdit }: VendaFormProps) {
+  const [form, setForm] = useState<FormState>({
     data: todayISO(),
     vendedor: nomeUsuario,
-    produto: PRODUTOS[0] || 'Café',
+    produto: PRODUTOS[0].nome,
     quantidade: '1',
-    valor_unitario: '',
+    valor_unitario: String(PRODUTOS[0].preco),
     cliente: '',
+    equipe: equipeUsuario,
+    forma_pagamento: 'dinheiro',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -26,22 +40,24 @@ export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEd
 
   useEffect(() => {
     if (!editData) {
-      setForm((f) => ({ ...f, vendedor: nomeUsuario }))
+      setForm((f) => ({ ...f, vendedor: nomeUsuario, equipe: equipeUsuario }))
     }
-  }, [nomeUsuario, editData])
+  }, [nomeUsuario, equipeUsuario, editData])
 
   useEffect(() => {
     if (editData) {
       setForm({
         data: editData.data ? String(editData.data).split('T')[0] : todayISO(),
         vendedor: String(editData.vendedor || nomeUsuario),
-        produto: String(editData.produto || PRODUTOS[0]),
+        produto: String(editData.produto || PRODUTOS[0].nome),
         quantidade: String(editData.quantidade || '1'),
         valor_unitario: String(editData.valor_unitario || ''),
         cliente: String(editData.cliente || ''),
+        equipe: Number(editData.equipe) || equipeUsuario,
+        forma_pagamento: String(editData.forma_pagamento || 'dinheiro'),
       })
     }
-  }, [editData, nomeUsuario])
+  }, [editData, nomeUsuario, equipeUsuario])
 
   const valorTotal =
     parseFloat(form.quantidade || '0') * parseFloat(form.valor_unitario || '0')
@@ -53,14 +69,18 @@ export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEd
     setSuccess(false)
   }
 
-  const setQuickProduct = (p: string) => {
-    setForm((prev) => ({ ...prev, produto: p }))
+  const setQuickProduct = (p: typeof PRODUTOS[number]) => {
+    setForm((prev) => ({ ...prev, produto: p.nome, valor_unitario: String(p.preco) }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.produto || !form.quantidade || !form.valor_unitario) {
       setError('Produto, quantidade e valor unitário são obrigatórios.')
+      return
+    }
+    if (!form.forma_pagamento) {
+      setError('Selecione a forma de pagamento.')
       return
     }
     setLoading(true)
@@ -83,10 +103,12 @@ export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEd
           setForm({
             data: todayISO(),
             vendedor: nomeUsuario,
-            produto: PRODUTOS[0] || 'Café',
+            produto: PRODUTOS[0].nome,
             quantidade: '1',
-            valor_unitario: '',
+            valor_unitario: String(PRODUTOS[0].preco),
             cliente: '',
+            equipe: equipeUsuario,
+            forma_pagamento: 'dinheiro',
           })
         }
         onSuccess()
@@ -100,22 +122,48 @@ export default function VendaForm({ nomeUsuario, onSuccess, editData, onCancelEd
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Product Quick Select */}
+      {/* Product Quick Select with Prices */}
       <div>
         <label className="label">Produto</label>
-        <div className="grid grid-cols-3 gap-2 mb-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
           {PRODUTOS.map((p) => (
             <button
-              key={p}
+              key={p.nome}
               type="button"
               onClick={() => setQuickProduct(p)}
-              className={`py-2 px-3 rounded-lg text-xs font-medium border transition-all text-center ${
-                form.produto === p
+              className={`py-2.5 px-3 rounded-lg text-xs font-medium border transition-all text-left ${
+                form.produto === p.nome
                   ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-300 font-semibold'
                   : 'bg-zinc-950/50 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
               }`}
             >
-              {p}
+              <div className="truncate">{p.nome}</div>
+              <div className={`text-[11px] font-mono mt-0.5 ${
+                form.produto === p.nome ? 'text-emerald-400' : 'text-zinc-500'
+              }`}>
+                {formatCurrency(p.preco)}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Payment Method */}
+      <div>
+        <label className="label">Forma de Pagamento</label>
+        <div className="grid grid-cols-3 gap-2">
+          {FORMAS_PAGAMENTO_VENDA.map((fp) => (
+            <button
+              key={fp.value}
+              type="button"
+              onClick={() => { setForm((prev) => ({ ...prev, forma_pagamento: fp.value })); setError('') }}
+              className={`py-2 px-3 rounded-lg text-xs font-medium border transition-all text-center ${
+                form.forma_pagamento === fp.value
+                  ? 'bg-blue-950/60 border-blue-500/60 text-blue-300 font-semibold'
+                  : 'bg-zinc-950/50 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+              }`}
+            >
+              {fp.label}
             </button>
           ))}
         </div>

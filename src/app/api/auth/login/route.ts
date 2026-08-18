@@ -25,10 +25,15 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { nome, senha } = body
+  const { nome, senha, equipe } = body
 
   if (!nome || !senha) {
     return NextResponse.json({ error: 'Nome e senha são obrigatórios.' }, { status: 400 })
+  }
+
+  const equipeNum = parseInt(equipe)
+  if (!equipeNum || equipeNum < 1 || equipeNum > 4) {
+    return NextResponse.json({ error: 'Selecione uma equipe válida (1 a 4).' }, { status: 400 })
   }
 
   // Artificial delay to slow brute force
@@ -44,10 +49,11 @@ export async function POST(request: NextRequest) {
   delete attempts[ip]
 
   // Create session
-  const response = NextResponse.json({ success: true, nome: normalizeName(nome) })
+  const response = NextResponse.json({ success: true, nome: normalizeName(nome), equipe: equipeNum })
   const session = await getIronSession<SessionData>(request, response, getSessionOptions())
 
   session.nome = normalizeName(nome)
+  session.equipe = equipeNum
   session.loggedIn = true
   await session.save()
 

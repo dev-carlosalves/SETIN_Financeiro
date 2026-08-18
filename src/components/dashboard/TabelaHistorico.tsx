@@ -16,6 +16,8 @@ interface HistoricoItem {
   produto?: string
   categoria?: string
   tipo_receita?: string
+  equipe?: number
+  forma_pagamento?: string
 }
 
 export default function TabelaHistorico() {
@@ -26,6 +28,7 @@ export default function TabelaHistorico() {
     produto: '',
     responsavel: '',
     status: '',
+    equipe: '',
     dataInicio: '',
     dataFim: '',
   })
@@ -65,6 +68,7 @@ export default function TabelaHistorico() {
       produto: '',
       responsavel: '',
       status: '',
+      equipe: '',
       dataInicio: '',
       dataFim: '',
     })
@@ -86,21 +90,31 @@ export default function TabelaHistorico() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
           <div>
             <label className="label text-[10px]">Tipo</label>
             <select name="tipo" value={filters.tipo} onChange={handleFilterChange} className="input-field py-1.5 text-xs">
               <option value="">Todos</option>
               <option value="venda">Vendas</option>
-              <option value="receita">Receitas</option>
+              <option value="receita">Patrocínio/Brindes</option>
               <option value="despesa">Despesas</option>
+            </select>
+          </div>
+          <div>
+            <label className="label text-[10px]">Equipe</label>
+            <select name="equipe" value={filters.equipe} onChange={handleFilterChange} className="input-field py-1.5 text-xs">
+              <option value="">Todas</option>
+              <option value="1">Equipe 1</option>
+              <option value="2">Equipe 2</option>
+              <option value="3">Equipe 3</option>
+              <option value="4">Equipe 4</option>
             </select>
           </div>
           <div>
             <label className="label text-[10px]">Produto</label>
             <select name="produto" value={filters.produto} onChange={handleFilterChange} className="input-field py-1.5 text-xs">
               <option value="">Todos</option>
-              {PRODUTOS.map((p) => <option key={p} value={p}>{p}</option>)}
+              {PRODUTOS.map((p) => <option key={p.nome} value={p.nome}>{p.nome}</option>)}
             </select>
           </div>
           <div>
@@ -166,8 +180,8 @@ export default function TabelaHistorico() {
                 <th className="py-3 px-3.5">Data</th>
                 <th className="py-3 px-3.5">Descrição</th>
                 <th className="py-3 px-3.5 text-right">Valor</th>
-                <th className="py-3 px-3.5">Status</th>
-                <th className="py-3 px-3.5 hidden sm:table-cell">Responsável</th>
+                <th className="py-3 px-3.5">Status / Pagto</th>
+                <th className="py-3 px-3.5 hidden sm:table-cell">Responsável / Equipe</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/60">
@@ -188,7 +202,7 @@ export default function TabelaHistorico() {
                   <tr key={idx} className="hover:bg-zinc-900/40 transition-colors">
                     <td className="py-3 px-3.5">
                       <span className={`badge uppercase text-[9px] tracking-wider font-semibold ${typeBadge}`}>
-                        {item.tipo}
+                        {item.tipo === 'receita' ? 'patrocínio' : item.tipo}
                       </span>
                     </td>
                     <td className="py-3 px-3.5 text-zinc-400 font-mono whitespace-nowrap">
@@ -207,12 +221,21 @@ export default function TabelaHistorico() {
                         <span className={`font-medium capitalize ${statusBadge}`}>
                           {item.status}
                         </span>
+                      ) : item.forma_pagamento ? (
+                        <span className="text-zinc-400 uppercase text-[10px] font-mono font-medium">
+                          {item.forma_pagamento}
+                        </span>
                       ) : (
                         <span className="text-zinc-600">—</span>
                       )}
                     </td>
-                    <td className="py-3 px-3.5 text-zinc-400 hidden sm:table-cell truncate max-w-[120px]">
-                      {item.responsavel || item.vendedor || '—'}
+                    <td className="py-3 px-3.5 text-zinc-400 hidden sm:table-cell truncate max-w-[150px]">
+                      <span>{item.responsavel || item.vendedor || '—'}</span>
+                      {item.equipe && (
+                        <span className="ml-2 text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-950/40 text-blue-300 border border-blue-800/30">
+                          EQ {item.equipe}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 )

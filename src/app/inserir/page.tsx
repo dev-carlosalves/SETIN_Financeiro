@@ -24,12 +24,15 @@ interface FeedItem {
   quantidade?: number
   tipo?: string
   categoria?: string
+  equipe?: number
+  forma_pagamento?: string
   criado_em: string
 }
 
 export default function InserirPage() {
   const [activeTab, setActiveTab] = useState<Tab>('venda')
   const [nomeUsuario, setNomeUsuario] = useState('')
+  const [equipeUsuario, setEquipeUsuario] = useState(1)
   const [feedItems, setFeedItems] = useState<FeedItem[]>([])
   const [feedLoading, setFeedLoading] = useState(true)
   const [metasOpen, setMetasOpen] = useState(false)
@@ -44,6 +47,7 @@ export default function InserirPage() {
           router.push('/login')
         } else {
           setNomeUsuario(d.nome || '')
+          setEquipeUsuario(d.equipe || 1)
         }
       })
       .catch(() => router.push('/login'))
@@ -82,13 +86,13 @@ export default function InserirPage() {
 
   const tabs: { key: Tab; label: string; desc: string }[] = [
     { key: 'venda', label: 'Venda de Produtos', desc: 'Café, Sanduíches e itens' },
-    { key: 'receita', label: 'Outras Receitas', desc: 'Patrocínios, inscrições e doações' },
+    { key: 'receita', label: 'Patrocínio e Brindes', desc: 'Patrocínios, inscrições e doações' },
     { key: 'despesa', label: 'Despesas e Custos', desc: 'Controle de saídas e fornecedores' },
   ]
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-12">
-      <Navbar nome={nomeUsuario} />
+      <Navbar nome={nomeUsuario} equipe={equipeUsuario} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {/* Page Header */}
@@ -143,6 +147,7 @@ export default function InserirPage() {
                 {activeTab === 'venda' && (
                   <VendaForm
                     nomeUsuario={nomeUsuario}
+                    equipeUsuario={equipeUsuario}
                     onSuccess={handleSuccess}
                     editData={editItem?._tipo === 'venda' ? (editItem as unknown as Record<string, unknown>) : null}
                     onCancelEdit={editItem ? handleCancelEdit : undefined}

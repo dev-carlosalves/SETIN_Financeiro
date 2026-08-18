@@ -15,10 +15,16 @@ async function migrate() {
         valor_unitario DECIMAL(10,2) NOT NULL,
         valor_total DECIMAL(10,2) NOT NULL,
         cliente TEXT,
+        equipe INTEGER NOT NULL DEFAULT 1,
+        forma_pagamento TEXT NOT NULL DEFAULT 'dinheiro',
         criado_em TIMESTAMP NOT NULL DEFAULT NOW()
       )
     `;
     console.log('✓ tabela vendas criada');
+
+    await sql`ALTER TABLE vendas ADD COLUMN IF NOT EXISTS equipe INTEGER NOT NULL DEFAULT 1`;
+    await sql`ALTER TABLE vendas ADD COLUMN IF NOT EXISTS forma_pagamento TEXT NOT NULL DEFAULT 'dinheiro'`;
+    console.log('✓ colunas equipe e forma_pagamento verificadas na tabela vendas');
 
     await sql`
       CREATE TABLE IF NOT EXISTS receitas_outras (

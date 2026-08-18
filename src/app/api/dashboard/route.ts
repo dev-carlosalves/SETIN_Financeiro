@@ -62,9 +62,6 @@ export async function GET(request: NextRequest) {
     let cumulativeReal = 0
     let cumulativeProjetado = 0
     const chartData = sortedDates.map((dateStr) => {
-      const dayStart = new Date(dateStr + 'T00:00:00.000Z')
-      const dayEnd = new Date(dateStr + 'T23:59:59.999Z')
-
       const dayVendas = allVendas
         .filter((v) => v.data.toISOString().split('T')[0] === dateStr)
         .reduce((sum, v) => sum + toNumber(v.valor_total), 0)
@@ -123,6 +120,28 @@ export async function GET(request: NextRequest) {
       .map(([categoria, valor]) => ({ categoria, valor }))
       .sort((a, b) => b.valor - a.valor)
 
+    // ===== Ranking por Equipe =====
+    const equipesMap: Record<number, { total: number; porDia: Record<string, number> }> = {}
+    // Initialize all 4 teams
+    for (let i = 1; i <= 4; i++) {
+      equipesMap[i] = { total: 0, porDia: {} }
+    }
+    allVendas.forEach((v: vendas) => {
+      const eq = v.equipe || 1
+      if (!equipesMap[eq]) equipesMap[eq] = { total: 0, porDia: {} }
+      equipesMap[eq].total += toNumber(v.valor_total)
+      const dia = v.data.toISOString().split('T')[0]
+      equipesMap[eq].porDia[dia] = (equipesMap[eq].porDia[dia] || 0) + toNumber(v.valor_total)
+    })
+
+    const rankingEquipes = Object.entries(equipesMap)
+      .map(([equipe, stats]) => ({
+        equipe: parseInt(equipe),
+        total: stats.total,
+        porDia: stats.porDia,
+      }))
+      .sort((a, b) => b.total - a.total)
+
     return NextResponse.json({
       cards: {
         totalVendidoHoje,
@@ -139,6 +158,7 @@ export async function GET(request: NextRequest) {
         produtos: rankingProdutos,
         vendedores: rankingVendedores,
         categorias: rankingCategorias,
+        equipes: rankingEquipes,
       },
     })
   } catch (error) {

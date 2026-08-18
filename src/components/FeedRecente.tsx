@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { TIPOS_RECEITA } from '@/lib/constants'
+import { TIPOS_RECEITA, FORMAS_PAGAMENTO_VENDA } from '@/lib/constants'
 
 interface FeedItem {
   id: number
@@ -17,6 +17,8 @@ interface FeedItem {
   quantidade?: number
   tipo?: string
   categoria?: string
+  equipe?: number
+  forma_pagamento?: string
   criado_em: string
 }
 
@@ -28,6 +30,10 @@ interface FeedRecenteProps {
 
 function getTipoReceitaLabel(tipo: string) {
   return TIPOS_RECEITA.find((t) => t.value === tipo)?.label || tipo
+}
+
+function getFormaPagamentoLabel(fp: string) {
+  return FORMAS_PAGAMENTO_VENDA.find((f) => f.value === fp)?.label || fp
 }
 
 export default function FeedRecente({ items, onRefresh, onEdit }: FeedRecenteProps) {
@@ -106,6 +112,16 @@ export default function FeedRecente({ items, onRefresh, onEdit }: FeedRecentePro
                   {item.status && (
                     <span className={`badge uppercase text-[10px] tracking-wider ${statusBadge}`}>
                       {item.status}
+                    </span>
+                  )}
+                  {item._tipo === 'venda' && item.equipe && (
+                    <span className="badge text-[10px] tracking-wider bg-blue-950/40 text-blue-300 border-blue-800/30">
+                      EQ {item.equipe}
+                    </span>
+                  )}
+                  {item._tipo === 'venda' && item.forma_pagamento && (
+                    <span className="badge text-[10px] tracking-wider bg-violet-950/40 text-violet-300 border-violet-800/30">
+                      {getFormaPagamentoLabel(item.forma_pagamento)}
                     </span>
                   )}
                   <span className="text-xs text-zinc-500 font-mono">{formatDate(item.data)}</span>
