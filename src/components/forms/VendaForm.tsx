@@ -23,6 +23,11 @@ interface FormState {
   forma_pagamento: string
 }
 
+function getPrecoPorProduto(nomeProduto: string): number {
+  const p = PRODUTOS.find((item) => item.nome === nomeProduto)
+  return p ? p.preco : PRODUTOS[0].preco
+}
+
 export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editData, onCancelEdit }: VendaFormProps) {
   const [form, setForm] = useState<FormState>({
     data: todayISO(),
@@ -46,21 +51,24 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
 
   useEffect(() => {
     if (editData) {
+      const prodName = String(editData.produto || PRODUTOS[0].nome)
+      const unitPrice = editData.valor_unitario !== undefined ? String(editData.valor_unitario) : String(getPrecoPorProduto(prodName))
       setForm({
         data: editData.data ? String(editData.data).split('T')[0] : todayISO(),
         vendedor: String(editData.vendedor || nomeUsuario),
-        produto: String(editData.produto || PRODUTOS[0].nome),
+        produto: prodName,
         quantidade: String(editData.quantidade || '1'),
-        valor_unitario: String(editData.valor_unitario || ''),
-        cliente: String(editData.cliente || ''),
+        valor_unitario: unitPrice,
+        cliente: '',
         equipe: Number(editData.equipe) || equipeUsuario,
         forma_pagamento: String(editData.forma_pagamento || 'dinheiro'),
       })
     }
   }, [editData, nomeUsuario, equipeUsuario])
 
-  const valorTotal =
-    parseFloat(form.quantidade || '0') * parseFloat(form.valor_unitario || '0')
+  const valorUnitarioNum = parseFloat(form.valor_unitario || '0')
+  const quantidadeNum = parseFloat(form.quantidade || '0')
+  const valorTotal = quantidadeNum * valorUnitarioNum
   const valorTotalDisplay = isNaN(valorTotal) ? 0 : valorTotal
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -70,13 +78,22 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
   }
 
   const setQuickProduct = (p: typeof PRODUTOS[number]) => {
-    setForm((prev) => ({ ...prev, produto: p.nome, valor_unitario: String(p.preco) }))
+    setForm((prev) => ({
+      ...prev,
+      produto: p.nome,
+      valor_unitario: String(p.preco),
+    }))
+    setError('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.produto || !form.quantidade || !form.valor_unitario) {
-      setError('Produto, quantidade e valor unitário são obrigatórios.')
+    if (!form.produto) {
+      setError('Selecione um produto.')
+      return
+    }
+    if (!form.quantidade || parseInt(form.quantidade) <= 0) {
+      setError('Informe uma quantidade válida (mínimo 1).')
       return
     }
     if (!form.forma_pagamento) {
@@ -92,7 +109,10 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          cliente: null,
+        }),
       })
       if (!res.ok) {
         const d = await res.json()
@@ -122,10 +142,10 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Product Quick Select with Prices */}
+      {/* Seleção do Produto com Preço Fixo */}
       <div>
-        <label className="label">Produto</label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
+        <label className="label">Selecione o Produto</label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {PRODUTOS.map((p) => (
             <button
               key={p.nome}
@@ -133,13 +153,13 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
               onClick={() => setQuickProduct(p)}
               className={`py-2.5 px-3 rounded-lg text-xs font-medium border transition-all text-left ${
                 form.produto === p.nome
-                  ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-300 font-semibold'
+                  ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-300 font-semibold ring-1 ring-emerald-500/30'
                   : 'bg-zinc-950/50 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
               }`}
             >
-              <div className="truncate">{p.nome}</div>
+              <div className="truncate font-medium">{p.nome}</div>
               <div className={`text-[11px] font-mono mt-0.5 ${
-                form.produto === p.nome ? 'text-emerald-400' : 'text-zinc-500'
+                form.produto === p.nome ? 'text-emerald-400 font-semibold' : 'text-zinc-500'
               }`}>
                 {formatCurrency(p.preco)}
               </div>
@@ -148,7 +168,7 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
         </div>
       </div>
 
-      {/* Payment Method */}
+      {/* Forma de Pagamento */}
       <div>
         <label className="label">Forma de Pagamento</label>
         <div className="grid grid-cols-3 gap-2">
@@ -159,7 +179,7 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
               onClick={() => { setForm((prev) => ({ ...prev, forma_pagamento: fp.value })); setError('') }}
               className={`py-2 px-3 rounded-lg text-xs font-medium border transition-all text-center ${
                 form.forma_pagamento === fp.value
-                  ? 'bg-blue-950/60 border-blue-500/60 text-blue-300 font-semibold'
+                  ? 'bg-blue-950/60 border-blue-500/60 text-blue-300 font-semibold ring-1 ring-blue-500/30'
                   : 'bg-zinc-950/50 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
               }`}
             >
@@ -169,7 +189,40 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Quantidade e Resumo de Valores */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+        <div>
+          <label className="label">Quantidade</label>
+          <input
+            type="number"
+            name="quantidade"
+            value={form.quantidade}
+            onChange={handleChange}
+            className="input-field text-base font-semibold"
+            min="1"
+            inputMode="numeric"
+            placeholder="1"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="label">Valor Unitário (Fixo)</label>
+          <div className="input-field bg-zinc-900/50 border-zinc-800/80 text-zinc-300 font-mono flex items-center select-none cursor-default">
+            {formatCurrency(valorUnitarioNum)}
+          </div>
+        </div>
+
+        <div>
+          <label className="label">Total da Venda</label>
+          <div className="input-field bg-emerald-950/30 border-emerald-500/40 text-emerald-400 font-mono font-bold text-base flex items-center justify-between select-none">
+            <span>{formatCurrency(valorTotalDisplay)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Data e Vendedor */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-zinc-800/60">
         <div>
           <label className="label">Data da Venda</label>
           <input
@@ -193,58 +246,6 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
             required
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="label">Quantidade</label>
-          <input
-            type="number"
-            name="quantidade"
-            value={form.quantidade}
-            onChange={handleChange}
-            className="input-field"
-            min="1"
-            inputMode="numeric"
-            placeholder="1"
-            required
-          />
-        </div>
-        <div>
-          <label className="label">Valor Unitário (R$)</label>
-          <input
-            type="number"
-            name="valor_unitario"
-            value={form.valor_unitario}
-            onChange={handleChange}
-            className="input-field"
-            min="0"
-            step="0.01"
-            inputMode="decimal"
-            placeholder="0,00"
-            required
-          />
-        </div>
-      </div>
-
-      {/* Calculated Total Box */}
-      <div className="bg-zinc-950/80 border border-zinc-800 rounded-lg px-4 py-3 flex justify-between items-center">
-        <span className="text-xs font-medium uppercase tracking-wider text-zinc-400">Total da Venda</span>
-        <span className="text-base font-semibold text-emerald-400 font-mono">
-          {formatCurrency(valorTotalDisplay)}
-        </span>
-      </div>
-
-      <div>
-        <label className="label">Identificação do Cliente (Opcional)</label>
-        <input
-          type="text"
-          name="cliente"
-          value={form.cliente}
-          onChange={handleChange}
-          className="input-field"
-          placeholder="Ex: Aluno, Professor, Convidado"
-        />
       </div>
 
       {error && (
