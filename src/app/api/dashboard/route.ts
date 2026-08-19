@@ -50,43 +50,33 @@ export async function GET(request: NextRequest) {
       .reduce((sum, r) => sum + toNumber(r.valor), 0)
     const totalHoje = totalVendidoHoje + receitasHoje
 
-    // ===== Chart Data (daily cumulative) =====
-    // Collect all unique dates
-    const allDates = new Set<string>()
-    allVendas.forEach((v) => allDates.add(v.data.toISOString().split('T')[0]))
-    allReceitas.forEach((r) => allDates.add(r.data.toISOString().split('T')[0]))
-    allDespesas.forEach((d) => allDates.add(d.data.toISOString().split('T')[0]))
+    // ===== Chart Data (Vendas por Dia e Comparativo/Diferença Diária) =====
+    const salesDates = new Set<string>()
+    allVendas.forEach((v) => salesDates.add(v.data.toISOString().split('T')[0]))
 
-    const sortedDates = Array.from(allDates).sort()
+    const sortedDates = Array.from(salesDates).sort()
 
-    let cumulativeReal = 0
-    let cumulativeProjetado = 0
-    const chartData = sortedDates.map((dateStr) => {
-      const dayVendas = allVendas
-        .filter((v) => v.data.toISOString().split('T')[0] === dateStr)
-        .reduce((sum, v) => sum + toNumber(v.valor_total), 0)
+    let prevDayTotal = 0
+    const chartData = sortedDates.map((dateStr, index) => {
+      const dayVendas = allVendas.filter((v) => v.data.toISOString().split('T')[0] === dateStr)
+      const valorTotal = dayVendas.reduce((sum, v) => sum + toNumber(v.valor_total), 0)
+      const quantidadeTotal = dayVendas.reduce((sum, v) => sum + v.quantidade, 0)
+      const transacoes = dayVendas.length
 
-      const dayReceitasRecebidas = allReceitas
-        .filter((r: receitas_outras) => r.data.toISOString().split('T')[0] === dateStr && r.status === 'recebido')
-        .reduce((sum: number, r: receitas_outras) => sum + toNumber(r.valor), 0)
-      const dayReceitasTodas = allReceitas
-        .filter((r: receitas_outras) => r.data.toISOString().split('T')[0] === dateStr)
-        .reduce((sum: number, r: receitas_outras) => sum + toNumber(r.valor), 0)
+      const diferenca = index === 0 ? 0 : valorTotal - prevDayTotal
+      const percentual =
+        index === 0 || prevDayTotal === 0 ? null : ((valorTotal - prevDayTotal) / prevDayTotal) * 100
 
-      const dayDespesasPagas = allDespesas
-        .filter((d: despesas) => d.data.toISOString().split('T')[0] === dateStr && d.status === 'pago')
-        .reduce((sum: number, d: despesas) => sum + toNumber(d.valor), 0)
-      const dayDespesasTodas = allDespesas
-        .filter((d: despesas) => d.data.toISOString().split('T')[0] === dateStr)
-        .reduce((sum: number, d: despesas) => sum + toNumber(d.valor), 0)
-
-      cumulativeReal += dayVendas + dayReceitasRecebidas - dayDespesasPagas
-      cumulativeProjetado += dayVendas + dayReceitasTodas - dayDespesasTodas
+      prevDayTotal = valorTotal
 
       return {
         date: dateStr,
-        saldoReal: cumulativeReal,
-        saldoProjetado: cumulativeProjetado,
+        valorTotal,
+        quantidadeTotal,
+        transacoes,
+        diferenca,
+        percentual,
+        isFirstDay: index === 0,
       }
     })
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import ResumoCards from '@/components/dashboard/ResumoCards'
 import ProgressoMetas from '@/components/dashboard/ProgressoMetas'
-import GraficoEvolucao from '@/components/dashboard/GraficoEvolucao'
+import GraficoVendasDiarias, { DailySalesPoint } from '@/components/dashboard/GraficoVendasDiarias'
 import TabelaHistorico from '@/components/dashboard/TabelaHistorico'
 import Rankings from '@/components/dashboard/Rankings'
 
@@ -20,7 +20,7 @@ interface DashboardData {
     diaria: { valor: number; atual: number } | null
     total: { valor: number; atual: number } | null
   }
-  chartData: Array<{ date: string; saldoReal: number; saldoProjetado: number }>
+  chartData: DailySalesPoint[]
   rankings: {
     produtos: Array<{ produto: string; quantidade: number; valor: number }>
     vendedores: Array<{ vendedor: string; valor: number }>
@@ -118,19 +118,19 @@ export default function VisualizarPage() {
               </div>
             )}
 
-            {/* Financial Flow Evolution Chart */}
+            {/* Daily Sales Comparison and Differences Chart */}
             <div className="card">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                    Evolução do Saldo Acumulado
+                    Comparativo de Vendas Diárias
                   </h2>
                   <p className="text-xs text-zinc-500 mt-0.5">
-                    Comparativo entre Saldo Real liquidado e Saldo Projetado
+                    Valores totais vendidos por dia e diferença em relação ao dia anterior
                   </p>
                 </div>
               </div>
-              <GraficoEvolucao data={data.chartData} />
+              <GraficoVendasDiarias data={data.chartData} />
             </div>
 
             {/* Financial Distribution (Products, Category Expenses & Team Rankings) */}
