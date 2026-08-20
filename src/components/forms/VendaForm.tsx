@@ -37,7 +37,7 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
     valor_unitario: String(PRODUTOS[0].preco),
     cliente: '',
     equipe: equipeUsuario,
-    forma_pagamento: 'dinheiro',
+    forma_pagamento: 'pix',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -61,7 +61,7 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
         valor_unitario: unitPrice,
         cliente: '',
         equipe: Number(editData.equipe) || equipeUsuario,
-        forma_pagamento: String(editData.forma_pagamento || 'dinheiro'),
+        forma_pagamento: String(editData.forma_pagamento || 'pix'),
       })
     }
   }, [editData, nomeUsuario, equipeUsuario])
@@ -128,7 +128,7 @@ export default function VendaForm({ nomeUsuario, equipeUsuario, onSuccess, editD
             valor_unitario: String(PRODUTOS[0].preco),
             cliente: '',
             equipe: equipeUsuario,
-            forma_pagamento: 'dinheiro',
+            forma_pagamento: 'pix',
           })
         }
         onSuccess()

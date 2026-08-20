@@ -24,7 +24,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
         valor_total,
         cliente: cliente ? String(cliente).trim() : null,
         equipe: parseInt(equipe) || 1,
-        forma_pagamento: forma_pagamento ? String(forma_pagamento).trim() : 'dinheiro',
+        forma_pagamento: forma_pagamento ? String(forma_pagamento).trim() : 'pix',
       },
     })
     return NextResponse.json(venda)

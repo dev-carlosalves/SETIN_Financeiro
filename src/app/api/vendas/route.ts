@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         valor_total,
         cliente: cliente ? String(cliente).trim() : null,
         equipe: equipeNum,
-        forma_pagamento: forma_pagamento ? String(forma_pagamento).trim() : 'dinheiro',
+        forma_pagamento: forma_pagamento ? String(forma_pagamento).trim() : 'pix',
       },
     })
 
